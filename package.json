@@ -33,5 +33,10 @@
     "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"
   },
+  "engines": {
+    "node": ">=22.0.0 <23",
+    "pnpm": ">=9.0.0"
+  },
+  "engineStrict": true,
   "private": true
 }
