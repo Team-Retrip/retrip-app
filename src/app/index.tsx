@@ -1,11 +1,25 @@
+import { WEBBRIDGE_MESSAGE_TYPE } from '@/libs/constants/webbridge'
 import { useGetWebviewMessage } from '@/libs/hooks/useGetWebviewMessage'
+import { useHandleAuthToken } from '@/libs/hooks/useHandleAuthToken'
+import { useTripCreateImageSelect } from '@/libs/hooks/useTripCreateImageSelect'
 import { WebBridge } from '@/libs/utils/sendMessageToWeb'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import Webview, { WebView } from 'react-native-webview'
 
 export default function Page() {
   const webviewRef = useRef<WebView>(null)
-  const { onMessage } = useGetWebviewMessage(webviewRef)
+
+  /** 인증 토큰 처리 */
+  const { sendAuthToken, setAuthToken } = useHandleAuthToken()
+  const onAuthTokenSet = useCallback((payload: unknown) => void setAuthToken(payload), [setAuthToken])
+
+  const webviewMassageHandlers = useMemo(
+    () => ({
+      [WEBBRIDGE_MESSAGE_TYPE.AUTH_SET_TOKEN]: onAuthTokenSet,
+    }),
+    [onAuthTokenSet]
+  )
+  const { onMessage } = useGetWebviewMessage({ handlers: webviewMassageHandlers })
 
   useEffect(() => {
     WebBridge.setRef(webviewRef)
@@ -18,6 +32,7 @@ export default function Page() {
       className="flex-1"
       source={{ uri: 'https://www.naver.com' }}
       onMessage={onMessage}
+      onLoadEnd={sendAuthToken}
       allowsBackForwardNavigationGestures
       cacheEnabled
       webviewDebuggingEnabled
