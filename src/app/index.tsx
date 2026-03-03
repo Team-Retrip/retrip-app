@@ -1,7 +1,7 @@
 import { WEBBRIDGE_MESSAGE_TYPE } from '@/libs/constants/webbridge'
 import { useGetWebviewMessage } from '@/libs/hooks/useGetWebviewMessage'
 import { useHandleAuthToken } from '@/libs/hooks/useHandleAuthToken'
-import { useTripCreateImageSelect } from '@/libs/hooks/useTripCreateImageSelect'
+import { useTripCreateImageSelect } from '@/libs/hooks/useUploadImage'
 import { WebBridge } from '@/libs/utils/sendMessageToWeb'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import Webview, { WebView } from 'react-native-webview'
@@ -12,12 +12,15 @@ export default function Page() {
   /** 인증 토큰 처리 */
   const { sendAuthToken, setAuthToken } = useHandleAuthToken()
   const onAuthTokenSet = useCallback((payload: unknown) => void setAuthToken(payload), [setAuthToken])
+  /** 여행 생성 플로우 이미지 선택 */
+  const { onTripCreateImageSelect } = useTripCreateImageSelect()
 
   const webviewMassageHandlers = useMemo(
     () => ({
+      [WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT]: onTripCreateImageSelect,
       [WEBBRIDGE_MESSAGE_TYPE.AUTH_SET_TOKEN]: onAuthTokenSet,
     }),
-    [onAuthTokenSet]
+    [onAuthTokenSet, onTripCreateImageSelect]
   )
   const { onMessage } = useGetWebviewMessage({ handlers: webviewMassageHandlers })
 

@@ -1,8 +1,8 @@
 import { STORAGE_KEY } from '@/libs/constants/auth'
 import { WEBBRIDGE_MESSAGE_TYPE } from '@/libs/constants/webbridge'
+import { getToken, setToken } from '@/libs/utils/handleSecureStorage'
 import { LOG } from '@/libs/utils/logger'
 import { WebBridge } from '@/libs/utils/sendMessageToWeb'
-import { getToken, setToken } from '@/libs/utils/tokenStorage'
 import { useCallback } from 'react'
 
 interface ParsedTokenPayload {

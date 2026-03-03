@@ -33,6 +33,13 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "갤러리 접근 엑세스 허용 문구 (임시)",
+          "cameraPermission": "카메라 접근 엑세스 허용 문구 (임시)"
+        }
+      ],
+      [
         "expo-secure-store",
         {
           "configureAndroidBackup": true
