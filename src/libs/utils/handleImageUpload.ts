@@ -92,7 +92,7 @@ export const handleTripCreateImageSelect = async (
     const imageBlob = await imageObject.blob()
     await putImageToS3(presignedUrl, imageBlob, targetImage.mimeType ?? 'image/jpeg')
 
-    WebBridge.postMessage(WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT_SUCCESS, { readImgUrl: readImageUrl })
+    WebBridge.postMessage(WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT_SUCCESS, { imageUrl: readImageUrl })
   } catch (error) {
     /** 이미지 업로드 실패한 경우  */
     WebBridge.postMessage(WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT_ERROR)

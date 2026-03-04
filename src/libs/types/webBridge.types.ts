@@ -10,7 +10,7 @@ export type WebviewMessageT =
 export type TripCreateImageSelectMessageT = {
   type: typeof WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT
   payload: {
-    source: (typeof WEBBRIDGE_IMAGE_SOURCE_TYPE)[keyof typeof WEBBRIDGE_IMAGE_SOURCE_TYPE]
+    type: (typeof WEBBRIDGE_IMAGE_SOURCE_TYPE)[keyof typeof WEBBRIDGE_IMAGE_SOURCE_TYPE]
   }
 }
 

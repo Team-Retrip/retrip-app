@@ -26,7 +26,7 @@ export default function Page() {
 
     /** 여행 생성 플로우 대표 이미지 선택 */
     if (message.type === WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT)
-      await handleTripCreateImageSelect(message.payload.source)
+      await handleTripCreateImageSelect(message.payload.type)
   }, [])
 
   const { onMessage } = useGetWebviewMessage(onWebviewMessage)
