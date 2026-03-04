@@ -1,22 +1,8 @@
 import { WEBBRIDGE_IMAGE_SOURCE_TYPE, WEBBRIDGE_MESSAGE_TYPE } from '@/libs/constants/webbridge'
 import * as ImagePicker from 'expo-image-picker'
-import { useCallback } from 'react'
 import { postPresignedUrl } from '../api/postPresignedUrl'
 import { putImageToS3 } from '../api/putImageToS3'
-import { WebBridge } from '../utils/sendMessageToWeb'
-
-/** WebviewMessage에서 이미지 선택 타입 추출 */
-const getImageSelectionType = (
-  payload: unknown
-): (typeof WEBBRIDGE_IMAGE_SOURCE_TYPE)[keyof typeof WEBBRIDGE_IMAGE_SOURCE_TYPE] | null => {
-  if (typeof payload !== 'object' || payload === null || !('type' in payload) || typeof payload.type !== 'string')
-    return null
-
-  const sourceType = payload.type
-  if (sourceType === WEBBRIDGE_IMAGE_SOURCE_TYPE.GALLERY) return WEBBRIDGE_IMAGE_SOURCE_TYPE.GALLERY
-  if (sourceType === WEBBRIDGE_IMAGE_SOURCE_TYPE.CAMERA) return WEBBRIDGE_IMAGE_SOURCE_TYPE.CAMERA
-  return null
-}
+import { WebBridge } from './sendMessageToWeb'
 
 /** 선택한 이미지에서 확장자 추출 */
 const getImageExtension = (image: ImagePicker.ImagePickerAsset) => {
@@ -84,41 +70,31 @@ const handleImageSelect = async (
   return Promise.resolve(null)
 }
 
-export const useTripCreateImageSelect = () => {
-  const handleTripCreateImageSelect = useCallback(async (payload: unknown) => {
-    try {
-      const sourceType = getImageSelectionType(payload)
-      if (!sourceType) throw new Error('[IMAGE_UPLOAD] invalid source type')
+export const handleTripCreateImageSelect = async (
+  sourceType: (typeof WEBBRIDGE_IMAGE_SOURCE_TYPE)[keyof typeof WEBBRIDGE_IMAGE_SOURCE_TYPE]
+) => {
+  try {
+    /** 이미지 선택 (카메라 or 갤러리) */
+    const result = await handleImageSelect(sourceType)
 
-      /** 이미지 선택 (카메라 or 갤러리) */
-      const result = await handleImageSelect(sourceType)
-
-      /** 이미지 선택을 취소한 경우 */
-      if (!result || result.canceled) {
-        WebBridge.postMessage(WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT_CANCEL)
-        return
-      }
-
-      const targetImage = result.assets[0]
-      const extension = getImageExtension(targetImage)
-      const { readImageUrl, presignedUrl } = await postPresignedUrl({ extension })
-
-      /** 이미지 업로드 성공한 경우 */
-      const imageObject = await fetch(targetImage.uri)
-      const imageBlob = await imageObject.blob()
-      await putImageToS3(presignedUrl, imageBlob, targetImage.mimeType ?? 'image/jpeg')
-
-      WebBridge.postMessage(WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT_SUCCESS, { readImgUrl: readImageUrl })
-    } catch (error) {
-      /** 이미지 업로드 실패한 경우  */
-      WebBridge.postMessage(WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT_ERROR)
+    /** 이미지 선택을 취소한 경우 */
+    if (!result || result.canceled) {
+      WebBridge.postMessage(WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT_CANCEL)
+      return
     }
-  }, [])
 
-  const onTripCreateImageSelect = useCallback(
-    (payload: unknown) => void handleTripCreateImageSelect(payload),
-    [handleTripCreateImageSelect]
-  )
+    const targetImage = result.assets[0]
+    const extension = getImageExtension(targetImage)
+    const { readImageUrl, presignedUrl } = await postPresignedUrl({ extension })
 
-  return { onTripCreateImageSelect }
+    /** 이미지 업로드 성공한 경우 */
+    const imageObject = await fetch(targetImage.uri)
+    const imageBlob = await imageObject.blob()
+    await putImageToS3(presignedUrl, imageBlob, targetImage.mimeType ?? 'image/jpeg')
+
+    WebBridge.postMessage(WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT_SUCCESS, { readImgUrl: readImageUrl })
+  } catch (error) {
+    /** 이미지 업로드 실패한 경우  */
+    WebBridge.postMessage(WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT_ERROR)
+  }
 }

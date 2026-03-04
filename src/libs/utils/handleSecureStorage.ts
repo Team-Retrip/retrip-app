@@ -7,3 +7,7 @@ export const setToken = async (key: string, value: string) => {
 export const getToken = async (key: string) => {
   return await SecureStore.getItemAsync(key)
 }
+
+export const deleteToken = async (key: string) => {
+  await SecureStore.deleteItemAsync(key)
+}

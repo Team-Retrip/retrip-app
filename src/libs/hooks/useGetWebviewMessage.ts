@@ -1,41 +1,28 @@
 import { useCallback } from 'react'
 import type { WebViewMessageEvent } from 'react-native-webview'
-import { WebviewMessage } from '../types/webBridge.types'
+import type { WebviewMessageT } from '../types/webBridge.types'
 import { LOG } from '../utils/logger'
 
-const parseWebviewMessage = (event: WebViewMessageEvent): WebviewMessage | null => {
-  const parsedData: unknown = JSON.parse(event.nativeEvent.data)
-  if (typeof parsedData !== 'object' || parsedData === null) return null
-
-  const messageType = Reflect.get(parsedData, 'type')
-  if (typeof messageType !== 'string') return null
-
-  const payload = Reflect.get(parsedData, 'payload')
-  return { type: messageType, payload }
-}
-
-type Props = {
-  handlers: Record<string, (payload: unknown) => void | undefined>
+export const isWebviewMessage = (data: unknown): data is WebviewMessageT => {
+  return typeof data === 'object' && data !== null && 'type' in data && typeof data.type === 'string'
 }
 
 /** 웹뷰 메시지 수신 훅 */
-export const useGetWebviewMessage = ({ handlers }: Props) => {
+export const useGetWebviewMessage = (handler: (message: WebviewMessageT) => void) => {
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
       try {
-        const message = parseWebviewMessage(event)
-        if (!message) return LOG('[WEBVIEW] 수신 메시지 형식 오류', event.nativeEvent.data)
+        const message = event.nativeEvent.data
+        if (!message) return LOG('[WEBVIEW] 수신 메시지 존재하지 않음')
+        if (!isWebviewMessage(message)) return LOG('[WEBVIEW] 수신 메시지 형식 오류', message)
 
-        LOG('[WEBVIEW] 메시지:', message)
-
-        const handleMessage = handlers[message.type]
-        if (handleMessage) handleMessage(message.payload)
-        else LOG('[WEBVIEW] 미처리 메시지 타입', message)
-      } catch (err) {
-        console.error('[WEBVIEW] 오류: ', event.nativeEvent.data)
+        LOG('[WEBVIEW] 수신 메시지:', message)
+        handler(message)
+      } catch {
+        LOG('[WEBVIEW] 오류', event.nativeEvent.data)
       }
     },
-    [handlers]
+    [handler]
   )
 
   return { onMessage }

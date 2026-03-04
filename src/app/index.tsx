@@ -1,28 +1,35 @@
+import { STORAGE_KEY } from '@/libs/constants/auth'
 import { WEBBRIDGE_MESSAGE_TYPE } from '@/libs/constants/webbridge'
 import { useGetWebviewMessage } from '@/libs/hooks/useGetWebviewMessage'
-import { useHandleAuthToken } from '@/libs/hooks/useHandleAuthToken'
-import { useTripCreateImageSelect } from '@/libs/hooks/useUploadImage'
+import type { WebviewMessageT } from '@/libs/types/webBridge.types'
+import { sendAuthToken, setAuthToken } from '@/libs/utils/handleAuthToken'
+import { handleTripCreateImageSelect } from '@/libs/utils/handleImageUpload'
+import { deleteToken } from '@/libs/utils/handleSecureStorage'
 import { WebBridge } from '@/libs/utils/sendMessageToWeb'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import Webview, { WebView } from 'react-native-webview'
 
 export default function Page() {
   const webviewRef = useRef<WebView>(null)
 
-  /** 인증 토큰 처리 */
-  const { sendAuthToken, setAuthToken } = useHandleAuthToken()
-  const onAuthTokenSet = useCallback((payload: unknown) => void setAuthToken(payload), [setAuthToken])
   /** 여행 생성 플로우 이미지 선택 */
-  const { onTripCreateImageSelect } = useTripCreateImageSelect()
+  const onWebviewMessage = useCallback(async (message: WebviewMessageT) => {
+    /** 앱 토큰 설정 */
+    if (message.type === WEBBRIDGE_MESSAGE_TYPE.AUTH_TOKEN_SET) await setAuthToken(message.payload)
+    /** 앱 토큰 삭제 */
+    if (message.type === WEBBRIDGE_MESSAGE_TYPE.AUTH_TOKEN_DELETE) {
+      deleteToken(STORAGE_KEY.ACCESS_TOKEN)
+      deleteToken(STORAGE_KEY.REFRESH_TOKEN)
+    }
+    /** 웹에서 보낸 토큰 동기화 요청 (앱 → 웹 토큰 전송 요청) */
+    if (message.type === WEBBRIDGE_MESSAGE_TYPE.AUTH_TOKEN_SYNC_REQUEST) await sendAuthToken()
 
-  const webviewMassageHandlers = useMemo(
-    () => ({
-      [WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT]: onTripCreateImageSelect,
-      [WEBBRIDGE_MESSAGE_TYPE.AUTH_SET_TOKEN]: onAuthTokenSet,
-    }),
-    [onAuthTokenSet, onTripCreateImageSelect]
-  )
-  const { onMessage } = useGetWebviewMessage({ handlers: webviewMassageHandlers })
+    /** 여행 생성 플로우 대표 이미지 선택 */
+    if (message.type === WEBBRIDGE_MESSAGE_TYPE.TRIP_CREATE_IMAGE_SELECT)
+      await handleTripCreateImageSelect(message.payload.source)
+  }, [])
+
+  const { onMessage } = useGetWebviewMessage(onWebviewMessage)
 
   useEffect(() => {
     WebBridge.setRef(webviewRef)
@@ -35,7 +42,6 @@ export default function Page() {
       className="flex-1"
       source={{ uri: 'https://www.naver.com' }}
       onMessage={onMessage}
-      onLoadEnd={sendAuthToken}
       allowsBackForwardNavigationGestures
       cacheEnabled
       webviewDebuggingEnabled
