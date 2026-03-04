@@ -14,10 +14,12 @@ export const useGetWebviewMessage = (handler: (message: WebviewMessageT) => void
       try {
         const message = event.nativeEvent.data
         if (!message) return LOG('[WEBVIEW] 수신 메시지 존재하지 않음')
-        if (!isWebviewMessage(message)) return LOG('[WEBVIEW] 수신 메시지 형식 오류', message)
 
-        LOG('[WEBVIEW] 수신 메시지:', message)
-        handler(message)
+        const parsedMessage = JSON.parse(message)
+        if (!isWebviewMessage(parsedMessage)) return LOG('[WEBVIEW] 수신 메시지 형식 오류', parsedMessage)
+
+        LOG('[WEBVIEW] 수신 메시지:', parsedMessage)
+        handler(parsedMessage)
       } catch {
         LOG('[WEBVIEW] 오류', event.nativeEvent.data)
       }
