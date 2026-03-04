@@ -63,7 +63,7 @@ const handleImageSelect = async (
     return await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.5,
     })
   }
 
