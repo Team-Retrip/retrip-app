@@ -1,27 +1,30 @@
 import { useCallback } from 'react'
-import type { WebView, WebViewMessageEvent } from 'react-native-webview'
+import type { WebViewMessageEvent } from 'react-native-webview'
+import type { WebviewMessageT } from '../types/webBridge.types'
 import { LOG } from '../utils/logger'
 
-/**
- * 웹에서 보낸 메시지 수신 훅
- */
-export function useGetWebviewMessage(webRef: React.RefObject<WebView | null>) {
+export const isWebviewMessage = (data: unknown): data is WebviewMessageT => {
+  return typeof data === 'object' && data !== null && 'type' in data && typeof data.type === 'string'
+}
+
+/** 웹뷰 메시지 수신 훅 */
+export const useGetWebviewMessage = (handler: (message: WebviewMessageT) => void) => {
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
       try {
-        const data = JSON.parse(event.nativeEvent.data)
-        LOG('[웹뷰 메시지]', data)
+        const message = event.nativeEvent.data
+        if (!message) return LOG('[WEBVIEW] 수신 메시지 존재하지 않음')
 
-        switch (data.type) {
-          /** SEE: Message Type별 case 생성하여 사용 */
-          default:
-            LOG('[웹뷰 메시지]', data)
-        }
-      } catch (err) {
-        console.error('[웹뷰 메시지] 오류: ', event.nativeEvent.data)
+        const parsedMessage = JSON.parse(message)
+        if (!isWebviewMessage(parsedMessage)) return LOG('[WEBVIEW] 수신 메시지 형식 오류', parsedMessage)
+
+        LOG('[WEBVIEW] 수신 메시지:', parsedMessage)
+        handler(parsedMessage)
+      } catch {
+        LOG('[WEBVIEW] 오류', event.nativeEvent.data)
       }
     },
-    [webRef]
+    [handler]
   )
 
   return { onMessage }
