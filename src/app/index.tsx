@@ -39,10 +39,11 @@ export default function Page() {
       ref={webviewRef}
       className="flex-1"
       /**
+       * 개발 테스트
        * - ios simulator 사용 시: `http://localhost:3000`
        * - 실기기 사용 시: LAN IP 주소 ex) `http://192.0.0.1:3000`
        */
-      source={{ uri: 'http://localhost:3000/trip' }}
+      source={{ uri: 'https://www.retrip.site' }}
       onMessage={onMessage}
       allowsBackForwardNavigationGestures
       cacheEnabled
