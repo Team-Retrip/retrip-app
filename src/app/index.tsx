@@ -17,10 +17,8 @@ export default function Page() {
     /** 앱 토큰 설정 */
     if (message.type === WEBBRIDGE_MESSAGE_TYPE.AUTH_TOKEN_SET) await setAuthToken(message.payload)
     /** 앱 토큰 삭제 */
-    if (message.type === WEBBRIDGE_MESSAGE_TYPE.AUTH_TOKEN_DELETE) {
-      deleteToken(STORAGE_KEY.ACCESS_TOKEN)
-      deleteToken(STORAGE_KEY.REFRESH_TOKEN)
-    }
+    if (message.type === WEBBRIDGE_MESSAGE_TYPE.AUTH_TOKEN_DELETE) deleteToken(STORAGE_KEY.ACCESS_TOKEN)
+
     /** 웹에서 보낸 토큰 동기화 요청 (앱 → 웹 토큰 전송 요청) */
     if (message.type === WEBBRIDGE_MESSAGE_TYPE.AUTH_TOKEN_SYNC_REQUEST) await sendAuthToken()
 

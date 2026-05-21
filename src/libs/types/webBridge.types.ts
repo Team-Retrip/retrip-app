@@ -18,7 +18,6 @@ export type AuthTokenSetMessageT = {
   type: typeof WEBBRIDGE_MESSAGE_TYPE.AUTH_TOKEN_SET
   payload: {
     accessToken: string
-    refreshToken: string
   }
 }
 
